@@ -149,4 +149,4 @@ class FirebaseRestClient:
 
             raise Exception("Failed to refresh token via Firebase REST API")
 
-        return Token(response_json["id_token"], response_json["refresh_token"])
+        return Token(access_token=response_json["id_token"], refresh_token=response_json["refresh_token"])

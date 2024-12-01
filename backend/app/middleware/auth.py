@@ -34,7 +34,7 @@ async def get_current_user(
                 status_code=401,
                 detail="User not found in database"
             )
-            
+        logger.info("workedd boss")
         return user
         
     except firebase_admin.auth.InvalidIdTokenError as e:

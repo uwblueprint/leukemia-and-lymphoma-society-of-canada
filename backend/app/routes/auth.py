@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from ..schemas.auth import AuthResponse, LoginRequest
+from ..schemas.auth import AuthResponse, LoginRequest, Token
 from ..services.implementations.auth_service import AuthService
 from ..services.implementations.user_service import UserService
 from ..utilities.db_utils import get_db
@@ -28,8 +28,19 @@ async def logout(
     auth_service: AuthService = Depends(get_auth_service)
 ):
     try:
-        auth_service.revoke_tokens(current_user.id)
+        auth_service.revoke_tokens(current_user)
         return {"message": "Successfully logged out"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/refresh", response_model=Token)
+async def refresh(
+    refresh_token: str,
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    try:
+        return auth_service.renew_token(refresh_token)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
