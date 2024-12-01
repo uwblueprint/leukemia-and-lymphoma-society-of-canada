@@ -4,15 +4,11 @@ from ..schemas.auth import AuthResponse, LoginRequest, Token
 from ..services.implementations.auth_service import AuthService
 from ..services.implementations.user_service import UserService
 from ..utilities.db_utils import get_db
+from ..utilities.service_utils import get_auth_service
 from ..middleware.auth import get_current_user
 import logging
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-def get_auth_service(db: Session = Depends(get_db)):
-    logger = logging.getLogger(__name__)
-    return AuthService(logger=logger, user_service=UserService(db))
-
 
 @router.post("/login", response_model=AuthResponse)
 async def login(

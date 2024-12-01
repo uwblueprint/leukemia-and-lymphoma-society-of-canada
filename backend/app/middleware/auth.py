@@ -4,7 +4,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import firebase_admin.auth
 from ..services.implementations.user_service import UserService
 from ..utilities.db_utils import get_db
-from ..schemas.user import UserRole
+from ..utilities.service_utils import get_user_service
 from functools import wraps
 from typing import Set
 
@@ -56,15 +56,17 @@ async def get_current_user(
 def require_roles(allowed_roles: Set[str]):
     def decorator(func):
         @wraps(func)
-        async def wrapper(*args, current_user=Depends(get_current_user), **kwargs):
+        async def wrapper(
+            *args, 
+            current_user=Depends(get_current_user),
+            user_service: UserService = Depends(get_user_service),
+            **kwargs
+        ):
             try:
-                # Get user role using the token from current_user
-                user_service = UserService(kwargs.get('db'))
                 user_role = user_service.get_user_role_by_auth_id(
                     firebase_admin.auth.verify_id_token(current_user["token"])["uid"]
                 )
                 
-                # Check if user's role is allowed
                 if user_role not in allowed_roles:
                     raise HTTPException(
                         status_code=403,

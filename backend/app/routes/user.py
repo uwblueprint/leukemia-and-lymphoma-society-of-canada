@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.schemas.user import UserCreateRequest, UserCreateResponse
 from app.services.implementations.user_service import UserService
 from app.utilities.db_utils import get_db
+from app.utilities.service_utils import get_user_service
 
 router = APIRouter(
     prefix="/users",
@@ -13,10 +14,6 @@ router = APIRouter(
 # TODO:
 # send email verification via auth_service
 # allow signup methods other than email (like sign up w Google)??
-
-
-def get_user_service(db: Session = Depends(get_db)):
-    return UserService(db)
 
 
 @router.post("/", response_model=UserCreateResponse)
