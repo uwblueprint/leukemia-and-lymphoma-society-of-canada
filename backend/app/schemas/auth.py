@@ -16,6 +16,10 @@ class Token(BaseModel):
     
     model_config = ConfigDict(from_attributes=True)
 
+class RefreshRequest(BaseModel):
+    """Request body for token refresh"""
+    refresh_token: str
+
 class AuthResponse(Token):
     """Authentication response containing tokens and user info"""
     user: UserCreateResponse

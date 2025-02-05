@@ -5,7 +5,7 @@ from typing import Union
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
-from app.routes import auth, email
+from app.routes import auth, email, test_endpoints
 
 load_dotenv()
 
@@ -32,7 +32,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(email.router)
-
+app.include_router(test_endpoints.router)
 
 @app.get("/")
 def read_root():

@@ -55,11 +55,20 @@ class AuthService(IAuthService):
 
     def is_authorized_by_role(self, access_token: str, roles: set[str]) -> bool:
         try:
+            print("\n=== Auth Service Role Check ===")
+            # print(f"Verifying token: {access_token[:50]}...")
             decoded_token = firebase_admin.auth.verify_id_token(access_token, check_revoked=True)
+            print(f"Decoded token UID: {decoded_token.get('uid')}")
             user_role = self.user_service.get_user_role_by_auth_id(decoded_token["uid"])
+            print(f"User role from DB: {user_role}")
+            print(f"Checking against roles: {roles}")
             firebase_user = firebase_admin.auth.get_user(decoded_token["uid"])
-            return firebase_user.email_verified and user_role in roles
-        except:
+            print(f"Email verified: {firebase_user.email_verified}")
+            result = firebase_user.email_verified and user_role in roles
+            print(f"Final authorization result: {result}")
+            return result
+        except Exception as e:
+            print(f"Authorization error: {str(e)}")
             return False
 
     def is_authorized_by_user_id(self, access_token: str, requested_user_id: str) -> bool:
