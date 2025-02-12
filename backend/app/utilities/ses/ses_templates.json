@@ -1,0 +1,8 @@
+[
+  {
+    "HtmlPart": "app/utilities/ses/template_files/test.html",
+    "SubjectPart": "Testing Email SES Template",
+    "TemplateName": "Test",
+    "TextPart": "app/utilities/ses/template_files/test.txt"
+  }
+]
