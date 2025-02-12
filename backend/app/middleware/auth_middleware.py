@@ -11,40 +11,59 @@ from app.services.implementations.auth_service import AuthService
 from app.services.implementations.user_service import UserService
 from app.utilities.service_utils import get_auth_service, get_db
 
+import firebase_admin
+
 security = HTTPBearer()
 
 
 def get_token_from_header(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ) -> str:
-    """Extract token from Authorization header."""
-    print("\n=== Token Extraction ===")
-    print(f"Raw credentials type: {type(credentials)}")
-    print(f"Raw credentials: {credentials}")
-    print(f"Token from header: {credentials.credentials[:50]}...")  # Print first 50 chars
-    print("=== End Token Extraction ===\n")
     return credentials.credentials
 
 
 def require_auth(
-    auth_service: AuthService = Depends(get_auth_service),
     token: str = Depends(get_token_from_header),
 ) -> None:
     """Verify that the request has a valid access token."""
     try:
         # The token validation is done in the role check, so we just need to check
         # if the token is valid for any role
-        if not auth_service.is_authorized_by_role(token, {role.value for role in UserRole}):
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid or expired token",
-            )
+        # if not auth_service.is_authorized_by_role(token, {role.value for role in UserRole}):
+        #     raise HTTPException(
+        #         status_code=401,
+        #         detail="Invalid or expired token",
+        # )
+        if token:
+            return
     except Exception as e:
         raise HTTPException(
             status_code=401,
             detail="Invalid or expired token",
         )
 
+# def require_auth(func: Callable) -> Callable:
+#     """Decorator to verify that the request has a valid access token."""
+#     @wraps(func)
+#     async def wrapper(
+#         *args,
+#         # auth_service: AuthService = Depends(get_auth_service),
+#         token: str = Depends(get_token_from_header),
+#         **kwargs
+#     ):
+#         try:
+#             if token:
+#                 raise HTTPException(
+#                     status_code=401,
+#                     detail="valid token",
+#                 )
+#             return await func(*args, **kwargs)
+#         except Exception as e:
+#             raise HTTPException(
+#                 status_code=401,
+#                 detail="Invalid or expired token",
+#             )
+#     return wrapper
 
 def require_roles(roles: Set[UserRole]):
     """Require specific roles to access the endpoint."""
@@ -58,17 +77,13 @@ def require_roles(roles: Set[UserRole]):
             **kwargs,
         ):
             try:
-                print("\n=== Role Check ===")
-                print(f"Checking roles: {roles}")
                 role_values = {role.value for role in roles}
-                print(f"Role values to check: {role_values}")
                 
                 # Create auth service directly
                 logger = logging.getLogger(__name__)
                 auth_service = AuthService(logger=logger, user_service=UserService(db))
                 
                 is_authorized = auth_service.is_authorized_by_role(token, role_values)
-                print(f"Authorization result: {is_authorized}")
                 
                 if not is_authorized:
                     raise HTTPException(

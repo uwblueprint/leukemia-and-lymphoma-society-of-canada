@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends
-from ..middleware.auth_middleware import require_auth, require_roles, require_user_id
+from fastapi import APIRouter, Depends, Request
+from ..middleware.auth_middleware import require_auth, require_roles, require_user_id, get_token_from_header
+from ..middleware.firebase_auth_middleware import require_roles as firebase_require_roles
 from ..schemas.user import UserRole
 
 router = APIRouter(prefix="/test", tags=["test"])
@@ -11,36 +12,26 @@ router = APIRouter(prefix="/test", tags=["test"])
 #     """Test endpoint requiring just authentication"""
 #     return {"message": "You are authenticated!"}
 
-# Role-based tests
-@router.get("/admin-only")
-@require_roles({UserRole.ADMIN})
-async def test_admin_only():
-    """Test endpoint requiring admin role"""
-    return {"message": "You are an admin!"}
+# Basic Firebase middleware test
+@router.get("/auth-middleware")
+async def test_firebase_middleware(request: Request):
+    """Test endpoint to verify Firebase middleware is working"""
+    return {
+        "message": "Firebase auth successful",
+        "user_id": request.state.user_id,
+        "claims": request.state.user_claims
+    }
 
-@router.get("/volunteer-or-admin")
-@require_roles({UserRole.VOLUNTEER, UserRole.ADMIN})
-async def test_volunteer_or_admin():
-    """Test endpoint requiring volunteer or admin role"""
-    return {"message": "You are a volunteer or admin!"}
-
-@router.get("/participant-only")
-@require_roles({UserRole.PARTICIPANT})
-async def test_participant_only():
-    """Test endpoint requiring participant role"""
-    return {"message": "You are a participant!"}
-
-# User-specific tests
-@router.get("/users/{user_id}/profile")
-@require_user_id()
-async def test_user_specific(user_id: str):
-    """Test endpoint requiring specific user access"""
-    return {"message": f"You can access user {user_id}'s profile!"}
-
-# Combined tests
-@router.get("/users/{user_id}/admin-action")
-@require_roles({UserRole.ADMIN})
-@require_user_id()
-async def test_admin_user_specific(user_id: str):
-    """Test endpoint requiring both admin role and specific user access"""
-    return {"message": f"You are an admin accessing user {user_id}'s data!"} 
+# Test user context middleware
+@router.get("/context")
+async def test_context(request: Request):
+    """Test endpoint to verify user context middleware"""
+    try:
+        return {
+            "request_id": request.state.request_id,
+            "timestamp": request.state.request_timestamp,
+        }
+    except Exception as e:
+        return {
+            "error": str(e)
+        }
